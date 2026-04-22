@@ -3,10 +3,18 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store'
 import { authApi } from '../api/client'
 
-function GithubIcon() {
+function ClaudeLogo({ size = 32 }) {
   return (
-    <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
-      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+    <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+      <circle cx="20" cy="20" r="20" fill="#d97041" opacity="0.15" />
+      <path
+        d="M20 8 C14 8 10 12 10 18 C10 22 12 25.5 16 27.5 L14 32 L20 29 L26 32 L24 27.5 C28 25.5 30 22 30 18 C30 12 26 8 20 8Z"
+        fill="#d97041"
+        opacity="0.9"
+      />
+      <circle cx="16" cy="18" r="2" fill="#1a1713" />
+      <circle cx="24" cy="18" r="2" fill="#1a1713" />
+      <path d="M16 23 Q20 26 24 23" stroke="#1a1713" strokeWidth="1.5" fill="none" strokeLinecap="round" />
     </svg>
   )
 }
@@ -22,18 +30,10 @@ function GoogleIcon() {
   )
 }
 
-function SynapseHexIcon({ size = 'md' }) {
-  const dim = size === 'sm' ? 32 : 64
-  const s = size === 'sm' ? 'w-6 h-6' : 'w-12 h-12'
-  const v = size === 'sm' ? '0 0 32 32' : '0 0 64 64'
-  const pts = size === 'sm'
-    ? { outer: '16,2 29,9 29,23 16,30 3,23 3,9', inner: '16,7 24,11.5 24,20.5 16,25 8,20.5 8,11.5', cx: 16, cy: 16, r: 4 }
-    : { outer: '32,4 58,18 58,46 32,60 6,46 6,18', inner: '32,12 50,22 50,42 32,52 14,42 14,22', cx: 32, cy: 32, r: 6 }
+function GithubIcon() {
   return (
-    <svg viewBox={v} className={s} fill="none">
-      <polygon points={pts.outer} stroke="#6366f1" strokeWidth="1.5" fill="none" opacity="0.25" />
-      <polygon points={pts.inner} stroke="#6366f1" strokeWidth="1" fill="none" opacity="0.45" />
-      <circle cx={pts.cx} cy={pts.cy} r={pts.r} fill="#6366f1" />
+    <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
     </svg>
   )
 }
@@ -58,13 +58,12 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError('')
-    setSuccess('')
+    setError(''); setSuccess('')
     setLoading(true)
     try {
       if (mode === 'register') {
         await authApi.register({ email: form.email, username: form.username, password: form.password })
-        setSuccess('Account created! You can now sign in.')
+        setSuccess('Account created! Sign in below.')
         setMode('login')
         return
       }
@@ -77,6 +76,17 @@ export default function Login() {
     }
   }
 
+  const handleGoogle = () => {
+    const p = new URLSearchParams({
+      client_id: gConfig.client_id,
+      redirect_uri: `${window.location.origin}/auth/callback`,
+      response_type: 'code',
+      scope: 'openid email profile',
+      state: 'google',
+    })
+    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${p}`
+  }
+
   const handleGitHub = () => {
     const p = new URLSearchParams({
       client_id: ghConfig.client_id,
@@ -86,83 +96,105 @@ export default function Login() {
     window.location.href = `https://github.com/login/oauth/authorize?${p}`
   }
 
-  const handleGoogle = () => {
-    const p = new URLSearchParams({
-      client_id: gConfig.client_id,
-      redirect_uri: `${window.location.origin}/auth/callback`,
-      response_type: 'code',
-      scope: 'openid email profile',
-      state: 'google',  // callback uses this to route to /api/auth/google
-      access_type: 'online',
-    })
-    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${p}`
-  }
-
   const hasOAuth = ghConfig.enabled || gConfig.enabled
 
   return (
-    <div className="min-h-screen flex bg-gray-950">
-      {/* Left — branding */}
-      <div className="hidden lg:flex flex-col justify-between w-1/2 bg-gray-900 border-r border-gray-800 p-12">
+    <div className="min-h-screen flex" style={{ background: '#1a1713' }}>
+      {/* Left — Claude branding panel */}
+      <div
+        className="hidden lg:flex flex-col justify-between w-[420px] shrink-0 p-10 border-r"
+        style={{ background: '#1f1b17', borderColor: '#2d2620' }}
+      >
         <div className="flex items-center gap-3">
-          <SynapseHexIcon size="md" />
-          <span className="text-xl font-bold text-gray-100 tracking-tight">Synapse</span>
+          <ClaudeLogo size={36} />
+          <div>
+            <div className="font-semibold text-lg" style={{ color: '#e8ddd6' }}>Synapse</div>
+            <div className="text-xs" style={{ color: '#8a7a70' }}>powered by Claude AI</div>
+          </div>
         </div>
 
         <div>
-          <h2 className="text-3xl font-light text-gray-200 leading-relaxed mb-3">
-            Your second brain,<br />
-            <span className="text-indigo-400 font-normal">powered by Claude AI.</span>
+          <h2 className="text-2xl font-medium leading-relaxed mb-2" style={{ color: '#e8ddd6' }}>
+            Your personal<br />
+            <span style={{ color: '#d97041' }}>AI knowledge base.</span>
           </h2>
-          <p className="text-sm text-gray-500 mb-8 max-w-xs">
-            Write notes, chat with your knowledge base, and let AI automatically organize everything for you.
+          <p className="text-sm mb-10" style={{ color: '#8a7a70', lineHeight: 1.7 }}>
+            Write notes, chat with Claude about your knowledge base,
+            and let AI automatically organize everything for you.
           </p>
-          <div className="space-y-4">
+
+          <div className="space-y-5">
             {[
-              { icon: '◧', label: 'Markdown notes with live preview', sub: 'Auto-summarized by Claude on save' },
-              { icon: '◈', label: 'Chat with your knowledge base', sub: 'Ask anything, Claude answers from your notes' },
-              { icon: '✦', label: 'Semantic search & auto-tagging', sub: 'Find notes by meaning, not just keywords' },
+              {
+                icon: (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                ),
+                label: 'Markdown notes',
+                sub: 'Auto-summarized by Claude on save',
+              },
+              {
+                icon: (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                ),
+                label: 'Chat with your knowledge',
+                sub: 'Ask anything, Claude answers from your notes',
+              },
+              {
+                icon: (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                ),
+                label: 'Smart auto-tagging',
+                sub: 'Semantic search across all your notes',
+              },
             ].map(({ icon, label, sub }) => (
               <div key={label} className="flex items-start gap-3">
-                <span className="text-indigo-400 text-lg mt-0.5 w-5 shrink-0">{icon}</span>
+                <div className="mt-0.5 p-1.5 rounded-md" style={{ background: '#d9704120', color: '#d97041' }}>
+                  {icon}
+                </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-300">{label}</p>
-                  <p className="text-xs text-gray-600 mt-0.5">{sub}</p>
+                  <p className="text-sm font-medium" style={{ color: '#e8ddd6' }}>{label}</p>
+                  <p className="text-xs mt-0.5" style={{ color: '#8a7a70' }}>{sub}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-gray-700">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-          Open source · Self-hosted · Powered by Anthropic Claude
-        </div>
+        <p className="text-xs" style={{ color: '#4a3f38' }}>
+          Open source · Self-hosted · Claude API
+        </p>
       </div>
 
       {/* Right — form */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-sm">
+        <div className="w-full max-w-[360px] animate-fade-in">
+
           {/* Mobile logo */}
-          <div className="flex items-center gap-3 mb-8 lg:hidden">
-            <SynapseHexIcon size="sm" />
-            <span className="text-lg font-bold text-gray-100">Synapse</span>
+          <div className="flex items-center gap-2.5 mb-8 lg:hidden">
+            <ClaudeLogo size={32} />
+            <span className="font-semibold text-lg" style={{ color: '#e8ddd6' }}>Synapse</span>
           </div>
 
-          <h1 className="text-2xl font-semibold text-gray-100 mb-1">
-            {mode === 'login' ? 'Welcome back' : 'Get started'}
+          <h1 className="text-2xl font-semibold mb-1" style={{ color: '#e8ddd6' }}>
+            {mode === 'login' ? 'Welcome back' : 'Create account'}
           </h1>
-          <p className="text-sm text-gray-500 mb-7">
-            {mode === 'login' ? 'Sign in to your knowledge base' : 'Create your personal AI knowledge base'}
+          <p className="text-sm mb-7" style={{ color: '#8a7a70' }}>
+            {mode === 'login' ? 'Sign in to your knowledge base' : 'Start building your second brain'}
           </p>
 
           {/* OAuth buttons */}
           {hasOAuth && (
-            <div className="space-y-2.5 mb-5">
+            <div className="space-y-2.5 mb-6">
               {gConfig.enabled && (
                 <button
                   onClick={handleGoogle}
-                  className="w-full flex items-center gap-3 bg-white hover:bg-gray-100 text-gray-800 font-medium px-4 py-2.5 rounded-lg transition-colors text-sm"
+                  className="w-full flex items-center justify-center gap-2.5 bg-white hover:bg-gray-50 text-gray-800 font-medium px-4 py-2.5 rounded-lg transition-colors text-sm"
                 >
                   <GoogleIcon />
                   Continue with Google
@@ -171,41 +203,47 @@ export default function Login() {
               {ghConfig.enabled && (
                 <button
                   onClick={handleGitHub}
-                  className="w-full flex items-center gap-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-200 font-medium px-4 py-2.5 rounded-lg transition-colors text-sm"
+                  className="w-full flex items-center justify-center gap-2.5 font-medium px-4 py-2.5 rounded-lg transition-colors text-sm border"
+                  style={{ background: '#252118', borderColor: '#2d2620', color: '#e8ddd6' }}
                 >
                   <GithubIcon />
                   Continue with GitHub
                 </button>
               )}
               <div className="flex items-center gap-3 pt-1">
-                <div className="flex-1 h-px bg-gray-800" />
-                <span className="text-xs text-gray-600">or continue with email</span>
-                <div className="flex-1 h-px bg-gray-800" />
+                <div className="flex-1 h-px" style={{ background: '#2d2620' }} />
+                <span className="text-xs" style={{ color: '#4a3f38' }}>or</span>
+                <div className="flex-1 h-px" style={{ background: '#2d2620' }} />
               </div>
             </div>
           )}
 
-          {/* Mode tabs */}
-          <div className="flex gap-1 mb-5 bg-gray-900 border border-gray-800 rounded-lg p-1">
+          {/* Tabs */}
+          <div
+            className="flex gap-1 mb-5 p-1 rounded-lg"
+            style={{ background: '#252118', border: '1px solid #2d2620' }}
+          >
             {['login', 'register'].map((m) => (
               <button
                 key={m}
                 onClick={() => { setMode(m); setError(''); setSuccess('') }}
-                className={`flex-1 py-1.5 rounded-md text-sm font-medium transition-all ${
+                className="flex-1 py-1.5 rounded-md text-sm font-medium transition-all capitalize"
+                style={
                   mode === m
-                    ? 'bg-gray-800 text-gray-100 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-300'
-                }`}
+                    ? { background: '#2e2820', color: '#e8ddd6' }
+                    : { color: '#8a7a70' }
+                }
               >
                 {m === 'login' ? 'Sign in' : 'Register'}
               </button>
             ))}
           </div>
 
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-3.5">
             {mode === 'register' && (
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1.5">Email</label>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: '#8a7a70' }}>Email</label>
                 <input
                   type="email"
                   value={form.email}
@@ -217,7 +255,7 @@ export default function Login() {
               </div>
             )}
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">Username</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: '#8a7a70' }}>Username</label>
               <input
                 value={form.username}
                 onChange={(e) => set('username', e.target.value)}
@@ -227,7 +265,7 @@ export default function Login() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">Password</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: '#8a7a70' }}>Password</label>
               <input
                 type="password"
                 value={form.password}
@@ -239,12 +277,14 @@ export default function Login() {
             </div>
 
             {error && (
-              <div className="flex items-center gap-2 text-red-400 text-xs bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+              <div className="flex items-center gap-2 text-xs px-3 py-2 rounded-lg"
+                style={{ background: '#3d1a1a', border: '1px solid #5a2020', color: '#f08080' }}>
                 <span>⚠</span> {error}
               </div>
             )}
             {success && (
-              <div className="flex items-center gap-2 text-green-400 text-xs bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-2">
+              <div className="flex items-center gap-2 text-xs px-3 py-2 rounded-lg"
+                style={{ background: '#1a3d2a', border: '1px solid #205a35', color: '#6fcf97' }}>
                 <span>✓</span> {success}
               </div>
             )}

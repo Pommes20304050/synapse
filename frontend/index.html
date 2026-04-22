@@ -1,17 +1,21 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en" class="dark h-full">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Synapse — AI Knowledge Base</title>
+    <title>Synapse</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
+    <style>
+      /* Prevent flash of unstyled content */
+      html { background: #1a1713; }
+    </style>
   </head>
-  <body class="bg-gray-950 text-gray-100 antialiased">
-    <div id="root"></div>
+  <body class="h-full">
+    <div id="root" class="h-full"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

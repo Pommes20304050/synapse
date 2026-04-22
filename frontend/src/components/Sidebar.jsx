@@ -1,24 +1,29 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store'
-import clsx from 'clsx'
 
 const links = [
-  { to: '/', label: 'Dashboard', icon: '▦' },
-  { to: '/notes', label: 'Notes', icon: '◧' },
-  { to: '/chat', label: 'AI Chat', icon: '◈' },
+  {
+    to: '/', label: 'Home', end: true,
+    icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>,
+  },
+  {
+    to: '/notes', label: 'Notes', end: false,
+    icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
+  },
+  {
+    to: '/chat', label: 'Chat',  end: false,
+    icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>,
+  },
 ]
 
-function SynapseHexIcon() {
+function ClaudeLogo() {
   return (
-    <svg viewBox="0 0 32 32" className="w-6 h-6 shrink-0" fill="none">
-      <polygon points="16,2 29,9 29,23 16,30 3,23 3,9" stroke="#6366f1" strokeWidth="1.5" fill="none" opacity="0.4" />
-      <circle cx="16" cy="16" r="4" fill="#6366f1" />
-      <line x1="16" y1="2" x2="16" y2="11" stroke="#6366f1" strokeWidth="1" opacity="0.4" />
-      <line x1="16" y1="21" x2="16" y2="30" stroke="#6366f1" strokeWidth="1" opacity="0.4" />
-      <line x1="3" y1="9" x2="11" y2="13" stroke="#6366f1" strokeWidth="1" opacity="0.4" />
-      <line x1="21" y1="19" x2="29" y2="23" stroke="#6366f1" strokeWidth="1" opacity="0.4" />
-      <line x1="29" y1="9" x2="21" y2="13" stroke="#6366f1" strokeWidth="1" opacity="0.4" />
-      <line x1="11" y1="19" x2="3" y2="23" stroke="#6366f1" strokeWidth="1" opacity="0.4" />
+    <svg width="24" height="24" viewBox="0 0 40 40" fill="none">
+      <circle cx="20" cy="20" r="20" fill="#d97041" opacity="0.15" />
+      <path d="M20 8 C14 8 10 12 10 18 C10 22 12 25.5 16 27.5 L14 32 L20 29 L26 32 L24 27.5 C28 25.5 30 22 30 18 C30 12 26 8 20 8Z" fill="#d97041" opacity="0.9" />
+      <circle cx="16" cy="18" r="2" fill="#1a1713" />
+      <circle cx="24" cy="18" r="2" fill="#1a1713" />
+      <path d="M16 23 Q20 26 24 23" stroke="#1a1713" strokeWidth="1.5" fill="none" strokeLinecap="round" />
     </svg>
   )
 }
@@ -27,85 +32,79 @@ export default function Sidebar() {
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
 
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
-
   return (
-    <aside className="w-56 flex flex-col bg-gray-900 border-r border-gray-800 shrink-0">
+    <aside
+      className="w-52 flex flex-col shrink-0 border-r h-full"
+      style={{ background: '#1f1b17', borderColor: '#2d2620' }}
+    >
       {/* Logo */}
-      <div className="px-4 py-4 border-b border-gray-800 flex items-center gap-2.5">
-        <SynapseHexIcon />
-        <span className="text-base font-bold text-gray-100 tracking-tight">Synapse</span>
+      <div className="px-4 py-4 flex items-center gap-2.5 border-b" style={{ borderColor: '#2d2620' }}>
+        <ClaudeLogo />
+        <span className="font-semibold text-sm tracking-tight" style={{ color: '#e8ddd6' }}>Synapse</span>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5">
-        {links.map(({ to, label, icon }) => (
+      <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
+        {links.map(({ to, label, icon, end }) => (
           <NavLink
             key={to}
             to={to}
-            end={to === '/'}
+            end={end}
             className={({ isActive }) =>
-              clsx(
-                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+              `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 isActive
-                  ? 'bg-indigo-500/10 text-indigo-400'
-                  : 'text-gray-400 hover:text-gray-100 hover:bg-gray-800'
-              )
+                  ? 'text-[#d97041] bg-[#d9704118]'
+                  : 'text-[#8a7a70] hover:text-[#e8ddd6] hover:bg-[#2e2820]'
+              }`
             }
           >
-            <span className="text-base w-4 text-center">{icon}</span>
+            {icon}
             {label}
           </NavLink>
         ))}
       </nav>
 
-      {/* Settings + User */}
-      <div className="px-3 pb-3 space-y-0.5">
+      {/* Bottom */}
+      <div className="px-2 pb-2 border-t pt-2" style={{ borderColor: '#2d2620' }}>
         <NavLink
           to="/settings"
           className={({ isActive }) =>
-            clsx(
-              'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-              isActive
-                ? 'bg-indigo-500/10 text-indigo-400'
-                : 'text-gray-500 hover:text-gray-100 hover:bg-gray-800'
-            )
+            `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              isActive ? 'text-[#d97041] bg-[#d9704118]' : 'text-[#4a3f38] hover:text-[#8a7a70] hover:bg-[#2e2820]'
+            }`
           }
         >
-          <span className="text-base w-4 text-center">⚙</span>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
           Settings
         </NavLink>
-      </div>
 
-      {/* User */}
-      <div className="p-3 border-t border-gray-800">
-        <div className="flex items-center gap-3 px-1 py-1.5">
+        {/* User chip */}
+        <div className="flex items-center gap-2.5 px-3 py-2 mt-1 rounded-lg" style={{ background: '#252118' }}>
           {user?.avatar_url ? (
-            <img
-              src={user.avatar_url}
-              alt={user.username}
-              className="w-7 h-7 rounded-full shrink-0 ring-1 ring-gray-700"
-            />
+            <img src={user.avatar_url} alt="" className="w-6 h-6 rounded-full ring-1" style={{ ringColor: '#2d2620' }} />
           ) : (
-            <div className="w-7 h-7 rounded-full bg-indigo-500 flex items-center justify-center text-xs font-bold text-white shrink-0">
-              {user?.username?.[0]?.toUpperCase() ?? '?'}
+            <div
+              className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+              style={{ background: '#d97041', color: '#1a1713' }}
+            >
+              {user?.username?.[0]?.toUpperCase()}
             </div>
           )}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-200 truncate">{user?.username}</p>
-            {user?.github_id && (
-              <p className="text-xs text-gray-600 truncate">via GitHub</p>
-            )}
-          </div>
+          <span className="flex-1 text-xs font-medium truncate" style={{ color: '#e8ddd6' }}>
+            {user?.username}
+          </span>
           <button
-            onClick={handleLogout}
-            className="text-gray-600 hover:text-gray-300 transition-colors text-sm"
+            onClick={() => { logout(); navigate('/login') }}
+            className="transition-colors text-xs"
+            style={{ color: '#4a3f38' }}
             title="Sign out"
           >
-            ⏻
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
           </button>
         </div>
       </div>
