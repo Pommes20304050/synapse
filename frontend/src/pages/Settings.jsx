@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react'
-import { settingsApi } from '../api/client'
+import { settingsApi, authApi } from '../api/client'
 
 export default function Settings() {
   const [apiKey, setApiKey] = useState('')
   const [status, setStatus] = useState(null)
+  const [googleEnabled, setGoogleEnabled] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
     settingsApi.getStatus().then((res) => setStatus(res.data))
+    authApi.googleConfig().then((res) => setGoogleEnabled(res.data.enabled)).catch(() => {})
   }, [])
 
   const handleSave = async (e) => {
@@ -108,15 +110,39 @@ export default function Settings() {
         {!status?.github_oauth_enabled && (
           <div className="bg-gray-800/50 rounded-lg p-4 text-xs text-gray-400 space-y-2 font-mono">
             <p className="text-gray-300 font-sans font-medium not-italic mb-2">Setup:</p>
-            <p>1. Go to <span className="text-indigo-400">github.com/settings/developers</span></p>
-            <p>2. New OAuth App → set callback URL to:</p>
+            <p>1. <span className="text-indigo-400">github.com/settings/developers</span> → New OAuth App</p>
+            <p>2. Callback URL: <span className="text-gray-300">http://localhost:5173/auth/callback</span></p>
+            <p>3. Add to <span className="text-gray-300">.env</span>:</p>
             <p className="bg-gray-900 px-2 py-1 rounded text-gray-300">
-              http://localhost:5173/auth/callback
+              GITHUB_CLIENT_ID=...<br />GITHUB_CLIENT_SECRET=...
             </p>
-            <p>3. Add to your <span className="text-gray-300">.env</span>:</p>
+          </div>
+        )}
+      </section>
+
+      {/* Google OAuth */}
+      <section className="card mt-6">
+        <div className="flex items-start justify-between mb-3">
+          <div>
+            <h2 className="text-sm font-semibold text-gray-200">Google OAuth</h2>
+            <p className="text-xs text-gray-500 mt-0.5">Allow users to sign in with Google.</p>
+          </div>
+          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+            googleEnabled ? 'bg-green-500/10 text-green-400' : 'bg-gray-700 text-gray-400'
+          }`}>
+            {googleEnabled ? 'Enabled' : 'Disabled'}
+          </span>
+        </div>
+        {!googleEnabled && (
+          <div className="bg-gray-800/50 rounded-lg p-4 text-xs text-gray-400 space-y-2 font-mono">
+            <p className="text-gray-300 font-sans font-medium not-italic mb-2">Setup:</p>
+            <p>1. <span className="text-indigo-400">console.cloud.google.com</span> → APIs & Services → Credentials</p>
+            <p>2. Create OAuth 2.0 Client ID (Web application)</p>
+            <p>3. Authorized redirect URI:</p>
+            <p className="bg-gray-900 px-2 py-1 rounded text-gray-300">http://localhost:5173/auth/callback</p>
+            <p>4. Add to <span className="text-gray-300">.env</span>:</p>
             <p className="bg-gray-900 px-2 py-1 rounded text-gray-300">
-              GITHUB_CLIENT_ID=your_client_id<br />
-              GITHUB_CLIENT_SECRET=your_secret
+              GOOGLE_CLIENT_ID=...<br />GOOGLE_CLIENT_SECRET=...
             </p>
           </div>
         )}

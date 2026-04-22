@@ -24,7 +24,6 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Email already registered")
     if db.query(User).filter(User.username == user_in.username).first():
         raise HTTPException(status_code=400, detail="Username already taken")
-
     user = User(
         email=user_in.email,
         username=user_in.username,
@@ -57,7 +56,43 @@ def me(current_user: User = Depends(get_current_user)):
     return current_user
 
 
-# ── GitHub OAuth ─────────────────────────────────────────────────────────────
+# ── Shared helper ─────────────────────────────────────────────────────────────
+
+def _find_or_create_oauth_user(
+    db: Session,
+    *,
+    oauth_uid: str,      # e.g. "github:12345" or "google:67890"
+    email: str,
+    display_name: str,
+    avatar: str | None,
+) -> User:
+    user = db.query(User).filter(User.github_id == oauth_uid).first()
+    if not user:
+        user = db.query(User).filter(User.email == email).first()
+        if user:
+            user.github_id = oauth_uid
+            user.avatar_url = avatar
+        else:
+            base = "".join(c if c.isalnum() else "_" for c in display_name).lower()[:20]
+            username = base
+            if db.query(User).filter(User.username == username).first():
+                username = f"{base}_{secrets.token_hex(3)}"
+            user = User(email=email, username=username, github_id=oauth_uid, avatar_url=avatar)
+            db.add(user)
+        db.commit()
+        db.refresh(user)
+    return user
+
+
+def _make_token(user: User) -> dict:
+    token = create_access_token(
+        {"sub": str(user.id)},
+        timedelta(minutes=settings.access_token_expire_minutes),
+    )
+    return {"access_token": token, "token_type": "bearer"}
+
+
+# ── GitHub OAuth ──────────────────────────────────────────────────────────────
 
 class GitHubCallbackRequest(BaseModel):
     code: str
@@ -65,7 +100,6 @@ class GitHubCallbackRequest(BaseModel):
 
 @router.get("/github/config")
 def github_config():
-    """Frontend fetches this to know if GitHub OAuth is enabled and which client_id to use."""
     if not settings.github_client_id:
         return {"enabled": False}
     return {"enabled": True, "client_id": settings.github_client_id}
@@ -77,7 +111,6 @@ async def github_callback(body: GitHubCallbackRequest, db: Session = Depends(get
         raise HTTPException(status_code=400, detail="GitHub OAuth not configured")
 
     async with httpx.AsyncClient() as client:
-        # Exchange code for access token
         token_res = await client.post(
             "https://github.com/login/oauth/access_token",
             json={
@@ -87,57 +120,83 @@ async def github_callback(body: GitHubCallbackRequest, db: Session = Depends(get
             },
             headers={"Accept": "application/json"},
         )
-        token_data = token_res.json()
-        gh_token = token_data.get("access_token")
+        gh_token = token_res.json().get("access_token")
         if not gh_token:
             raise HTTPException(status_code=400, detail="GitHub auth failed")
 
-        # Get user info
         user_res = await client.get(
             "https://api.github.com/user",
             headers={"Authorization": f"Bearer {gh_token}"},
         )
         gh_user = user_res.json()
 
-        # Get primary email if not public
         email = gh_user.get("email")
         if not email:
             emails_res = await client.get(
                 "https://api.github.com/user/emails",
                 headers={"Authorization": f"Bearer {gh_token}"},
             )
-            emails = emails_res.json()
-            primary = next((e for e in emails if e.get("primary")), None)
+            primary = next((e for e in emails_res.json() if e.get("primary")), None)
             email = primary["email"] if primary else f"{gh_user['login']}@github.local"
 
-    gh_id = str(gh_user["id"])
-    gh_login = gh_user.get("login", f"gh_{gh_id}")
-    avatar = gh_user.get("avatar_url")
-
-    # Find or create user
-    user = db.query(User).filter(User.github_id == gh_id).first()
-    if not user:
-        user = db.query(User).filter(User.email == email).first()
-        if user:
-            user.github_id = gh_id
-            user.avatar_url = avatar
-        else:
-            # Ensure unique username
-            username = gh_login
-            if db.query(User).filter(User.username == username).first():
-                username = f"{gh_login}_{secrets.token_hex(3)}"
-            user = User(
-                email=email,
-                username=username,
-                github_id=gh_id,
-                avatar_url=avatar,
-            )
-            db.add(user)
-        db.commit()
-        db.refresh(user)
-
-    token = create_access_token(
-        {"sub": str(user.id)},
-        timedelta(minutes=settings.access_token_expire_minutes),
+    user = _find_or_create_oauth_user(
+        db,
+        oauth_uid=f"github:{gh_user['id']}",
+        email=email,
+        display_name=gh_user.get("login", "github_user"),
+        avatar=gh_user.get("avatar_url"),
     )
-    return {"access_token": token, "token_type": "bearer"}
+    return _make_token(user)
+
+
+# ── Google OAuth ──────────────────────────────────────────────────────────────
+
+class GoogleCallbackRequest(BaseModel):
+    code: str
+    redirect_uri: str
+
+
+@router.get("/google/config")
+def google_config():
+    if not settings.google_client_id:
+        return {"enabled": False}
+    return {"enabled": True, "client_id": settings.google_client_id}
+
+
+@router.post("/google", response_model=Token)
+async def google_callback(body: GoogleCallbackRequest, db: Session = Depends(get_db)):
+    if not settings.google_client_id or not settings.google_client_secret:
+        raise HTTPException(status_code=400, detail="Google OAuth not configured")
+
+    async with httpx.AsyncClient() as client:
+        token_res = await client.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "code": body.code,
+                "client_id": settings.google_client_id,
+                "client_secret": settings.google_client_secret,
+                "redirect_uri": body.redirect_uri,
+                "grant_type": "authorization_code",
+            },
+        )
+        g_token = token_res.json().get("access_token")
+        if not g_token:
+            raise HTTPException(status_code=400, detail="Google auth failed")
+
+        user_res = await client.get(
+            "https://www.googleapis.com/oauth2/v2/userinfo",
+            headers={"Authorization": f"Bearer {g_token}"},
+        )
+        g_user = user_res.json()
+
+    email = g_user.get("email", f"{g_user['id']}@google.local")
+    name = g_user.get("name") or g_user.get("given_name") or email.split("@")[0]
+
+    user = _find_or_create_oauth_user(
+        db,
+        oauth_uid=f"google:{g_user['id']}",
+        email=email,
+        display_name=name,
+        avatar=g_user.get("picture"),
+    )
+    return _make_token(user)

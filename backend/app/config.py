@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     github_client_id: Optional[str] = None
     github_client_secret: Optional[str] = None
 
+    # Google OAuth
+    google_client_id: Optional[str] = None
+    google_client_secret: Optional[str] = None
+
     class Config:
         env_file = ".env"
 

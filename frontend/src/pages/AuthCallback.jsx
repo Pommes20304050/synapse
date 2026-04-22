@@ -9,20 +9,30 @@ export default function AuthCallback() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    const code = new URLSearchParams(window.location.search).get('code')
+    const params = new URLSearchParams(window.location.search)
+    const code = params.get('code')
+    const provider = params.get('state') // "google" or absent (github)
+
     if (!code) {
-      setError('No code returned from GitHub.')
+      setError('No code returned from provider.')
       return
     }
 
-    authApi.githubCallback(code)
+    const redirectUri = `${window.location.origin}/auth/callback`
+
+    const promise =
+      provider === 'google'
+        ? authApi.googleCallback(code, redirectUri)
+        : authApi.githubCallback(code)
+
+    promise
       .then(async (res) => {
         localStorage.setItem('synapse_token', res.data.access_token)
         await fetchMe()
         navigate('/')
       })
       .catch(() => {
-        setError('GitHub login failed. Please try again.')
+        setError(`${provider === 'google' ? 'Google' : 'GitHub'} login failed. Please try again.`)
       })
   }, [])
 
@@ -43,7 +53,7 @@ export default function AuthCallback() {
     <div className="min-h-screen flex items-center justify-center bg-gray-950">
       <div className="text-center">
         <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-gray-400 text-sm">Signing you in with GitHub…</p>
+        <p className="text-gray-400 text-sm">Signing you in…</p>
       </div>
     </div>
   )

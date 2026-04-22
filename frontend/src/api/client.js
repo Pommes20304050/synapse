@@ -35,6 +35,8 @@ export const authApi = {
   me: () => api.get('/auth/me'),
   githubConfig: () => api.get('/auth/github/config'),
   githubCallback: (code) => api.post('/auth/github', { code }),
+  googleConfig: () => api.get('/auth/google/config'),
+  googleCallback: (code, redirect_uri) => api.post('/auth/google', { code, redirect_uri }),
 }
 
 export const notesApi = {
