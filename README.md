@@ -7,6 +7,10 @@
 
 Synapse is a self-hosted, AI-powered personal knowledge management system. Write Markdown notes, let Claude auto-summarize and tag them, then chat with your entire knowledge base using natural language.
 
+<img width="1917" height="908" alt="image" src="https://github.com/user-attachments/assets/f88ecce4-2a97-4ddb-b2b8-e96f59e1766a" />
+
+
+
 ## Features
 
 - **Markdown Notes** — full editor with live preview
