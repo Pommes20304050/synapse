@@ -3,9 +3,11 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store'
 import Layout from './components/Layout'
 import Login from './pages/Login'
+import AuthCallback from './pages/AuthCallback'
 import Dashboard from './pages/Dashboard'
 import Notes from './pages/Notes'
 import Chat from './pages/Chat'
+import Settings from './pages/Settings'
 
 function PrivateRoute({ children }) {
   const { user, token } = useAuthStore()
@@ -23,6 +25,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route
         path="/"
         element={
@@ -34,6 +37,7 @@ export default function App() {
         <Route index element={<Dashboard />} />
         <Route path="notes" element={<Notes />} />
         <Route path="chat" element={<Chat />} />
+        <Route path="settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

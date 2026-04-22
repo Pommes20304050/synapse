@@ -33,6 +33,8 @@ export const authApi = {
     })
   },
   me: () => api.get('/auth/me'),
+  githubConfig: () => api.get('/auth/github/config'),
+  githubCallback: (code) => api.post('/auth/github', { code }),
 }
 
 export const notesApi = {
@@ -52,6 +54,11 @@ export const aiApi = {
 
 export const searchApi = {
   search: (q, semantic = false) => api.get('/search/', { params: { q, semantic } }),
+}
+
+export const settingsApi = {
+  getStatus: () => api.get('/settings/'),
+  update: (data) => api.post('/settings/', data),
 }
 
 export default api
